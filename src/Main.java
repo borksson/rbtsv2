@@ -48,6 +48,7 @@ public class Main extends PApplet {
                 Translation translation = this.pendingMovements.get(0);
                 if(translation.isDead()){
                     //TODO: KILL ROBOT
+                    System.out.println("ROBOT IS DEAD");
                 }
                 if(translation.isChangeColor()){
                     rbt.setFill(randColor());
@@ -72,20 +73,24 @@ public class Main extends PApplet {
         }
     }
 
-    Robot testRbt;
+    ArrayList<Robot> robots = new ArrayList<>();
 
     public void settings(){
         size(600,600);
     }
 
     public void setup(){
-         testRbt = new Robot(50, 50, UUID.fromString("aaaaaaaa-5aaa-6aaa-7aaa-8aaa9aaaaaaa"));
-         background(0);
+        for(int i=0;i<20;i++){
+            robots.add(new Robot(300,300, UUID.randomUUID()));
+        }
+        background(0);
     }
     public void draw(){
         clear();
-        testRbt.display();
-        testRbt.step();
+        for(Robot r: robots){
+            r.display();
+            r.step();
+        }
     }
 
     public static void main(String[] args) {

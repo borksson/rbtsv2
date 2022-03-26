@@ -46,81 +46,119 @@ public class MovementMachine {
 
     MovementMachine(String seed){
         this.seed = seed;
-        System.out.println(this.seed);
     }
 
     ArrayList<Translation> makeMovement(Integer age) {
         int index = age%32;
         char movement_type = this.seed.charAt(index);
         ArrayList<Translation> pattern = new ArrayList<>();
-        //TODO: Add movement length calculation
+        int mov_length = index-1;
+        if(mov_length==-1){
+            mov_length = 31;
+        }
+        char mov_char = this.seed.charAt(mov_length);
+        int movement = Integer.parseInt(Character.toString(mov_char),16);
+        if(movement>14){
+            movement = 3;
+        } else if (movement>7){
+            movement = 2;
+        } else {
+            movement = 1;
+        }
+        ArrayList<Translation> pauses = new ArrayList<>();
+        for(int i = 0; i<(10-(movement*2)); i++){
+            pauses.add(new Translation(0,0,false,false));
+        }
         switch (movement_type){
             case '0':
-                pattern.add(new Translation(0, -1,false, false));
+                pattern.add(new Translation(0, -movement,false, false));
                 break;
             case '1':
-                pattern.add(new Translation(0, 1,false, false));
+                pattern.add(new Translation(0, movement,false, false));
                 break;
             case '2':
-                pattern.add(new Translation(-1, 0,false, false));
+                pattern.add(new Translation(-movement, 0,false, false));
                 break;
             case '3':
-                pattern.add(new Translation(1, 0,false, false));
+                pattern.add(new Translation(movement, 0,false, false));
                 break;
             case '4':
-                //TODO: Figure out sizes
-                pattern.add(new Translation(1, 0,false, false));
-                pattern.add(new Translation(0, 1,false, false));
-                pattern.add(new Translation(-1, 0,false, false));
-                pattern.add(new Translation(0, -1,false, false));
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(1, 0,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(0, 1,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(-1, 0,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(0, -1,false, false));
+                }
+                pattern.addAll(pauses);
                 break;
             case '5':
-                //TODO: Figure out sizes
-                pattern.add(new Translation(0, 1,false, false));
-                pattern.add(new Translation(1, 0,false, false));
-                pattern.add(new Translation(0, -1,false, false));
-                pattern.add(new Translation(-1, 0,false, false));
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(0, 1,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(1, 0,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(0, -1,false, false));
+                }
+                pattern.addAll(pauses);
+                for(int i=0; i<movement+1; i++){
+                    pattern.add(new Translation(-1, 0,false, false));
+                }
+                pattern.addAll(pauses);
                 break;
             case '6':
-                pattern.add(new Translation(1, -1,false, false));
+                pattern.add(new Translation(movement, -movement,false, false));
                 break;
             case '7':
-                pattern.add(new Translation(-1, -1,false, false));
+                pattern.add(new Translation(-movement, -movement,false, false));
                 break;
             case '8':
-                pattern.add(new Translation(1, 1,false, false));
+                pattern.add(new Translation(movement, movement,false, false));
                 break;
             case '9':
-                pattern.add(new Translation(-1, 1,false, false));
+                pattern.add(new Translation(-movement, movement,false, false));
                 break;
             case 'a':
-            case 'b':
                 pattern.add(new Translation(0, 0,false, true));
                 break;
             case 'e':
+                //TODO: Add have child
+                break;
             case 'f':
-                pattern.add(new Translation(0, 0,true, false));
+                if(age>64){
+                    pattern.add(new Translation(0, 0,true, false));
+                }
                 break;
             default:
                 break;
         }
-        //TODO: Add speed (wait times)
         int distance_index = index+1;
         if(distance_index==32){
             distance_index=0;
         }
         char distance_char = this.seed.charAt(distance_index);
         int distance = Integer.parseInt(Character.toString(distance_char),16);
-        ArrayList<Translation> movement = new ArrayList<>();
+        ArrayList<Translation> movements = new ArrayList<>();
         for (int i = 0; i < distance; i++){
-            movement.addAll(pattern);
+            movements.addAll(pattern);
+            movements.addAll(pauses);
         }
-        return movement;
+        if(age>96){
+            movements.clear();
+            movements.add(new Translation(0,0,true,false));
+        }
+        return movements;
     }
-
-    public static void main(String[] args){
-        MovementMachine movementMachine = new MovementMachine("262808d7b61a478688d55570d1e65017");
-        System.out.println(movementMachine.makeMovement(33));
-    }
-
 }
