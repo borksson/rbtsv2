@@ -26,6 +26,8 @@ public class Main extends PApplet {
         Integer age;
         MovementMachine movementMachine;
         ArrayList<Translation> pendingMovements;
+        boolean isDead = false;
+        boolean isPregnant = false;
 
         public Robot(int x, int y, UUID seed) {
             this.x = x;
@@ -38,27 +40,6 @@ public class Main extends PApplet {
             this.pendingMovements = new ArrayList<>();
         }
 
-        void calcNextPos() {
-            //TODO: Takes UUID and converts it into a movement pattern
-            if(this.pendingMovements.isEmpty()){
-                this.pendingMovements = this.movementMachine.makeMovement(this.age);
-                this.age++;
-            }
-            else {
-                Translation translation = this.pendingMovements.get(0);
-                if(translation.isDead()){
-                    //TODO: KILL ROBOT
-                    System.out.println("ROBOT IS DEAD");
-                }
-                if(translation.isChangeColor()){
-                    rbt.setFill(randColor());
-                }
-                this.x += translation.getX();
-                this.y += translation.getY();
-                this.pendingMovements.remove(0);
-            }
-        }
-
         @Override
         public void display() {
             pushMatrix();
@@ -69,27 +50,94 @@ public class Main extends PApplet {
 
         @Override
         public void step() {
-            calcNextPos();
+            //Takes UUID and converts it into a movement pattern
+            if(this.pendingMovements.isEmpty()){
+                this.pendingMovements = this.movementMachine.makeMovement(this.age);
+                this.age++;
+            }
+            else {
+                Translation translation = this.pendingMovements.get(0);
+                if(translation.isDead()){
+                    this.isDead = true;
+                }
+                if(translation.isChangeColor()){
+                    rbt.setFill(randColor());
+                }
+                if(translation.isPregnant()){
+                    this.isPregnant = true;
+                    System.out.println("GIVE BIRTH.");
+                }
+                this.x += translation.getX();
+                this.y += translation.getY();
+                this.pendingMovements.remove(0);
+            }
         }
     }
 
     ArrayList<Robot> robots = new ArrayList<>();
+    boolean isPaused = false;
+    boolean isForward = true;
+
+    void gameStep(){
+        clear();
+        ArrayList<Robot> robots_cpy = (ArrayList<Robot>) robots.clone();
+        for(Robot r: robots_cpy){
+            r.display();
+            r.step();
+            if(r.isDead){
+                robots.remove(r);
+            }
+            if(r.isPregnant){
+                r.isPregnant = false;
+                int x = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+                int y = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+                robots.add(new Robot(x,y, UUID.randomUUID()));
+            }
+        }
+    }
+
+    //TODO: gameBackStep
 
     public void settings(){
         size(600,600);
     }
 
     public void setup(){
-        for(int i=0;i<20;i++){
-            robots.add(new Robot(300,300, UUID.randomUUID()));
+        for(int i=0;i<2;i++){
+            int x = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+            int y = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+            robots.add(new Robot(x,y, UUID.fromString("0b0b0b0b-0b0b-0b0b-0b0b-0b0b0b0b0b0b")));
         }
         background(0);
     }
+
+    public void keyPressed() {
+        final int k = keyCode;
+        if(isPaused){
+            if(k==39){
+                redraw();
+            }
+            else if(k==37){
+                System.out.println("BACK STEP");
+            }
+        }
+        if (k == 'P') {
+            if (looping) {
+                noLoop();
+                this.isPaused = true;
+            } else {
+                loop();
+                this.isPaused = false;
+            }
+        }
+    }
+
     public void draw(){
-        clear();
-        for(Robot r: robots){
-            r.display();
-            r.step();
+        if(isForward){
+            gameStep();
+        }
+        else {
+
         }
     }
 
