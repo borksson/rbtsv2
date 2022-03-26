@@ -70,7 +70,7 @@ public class MovementMachine {
 //        } else {
 //            movement = 1;
 //        }
-        movement = 10;
+        movement = 1;
         ArrayList<Translation> pauses = new ArrayList<>();
         for(int i = 0; i<(10-(movement*2)); i++){
             pauses.add(new Translation(0,0,false,false, false));
@@ -139,13 +139,8 @@ public class MovementMachine {
             case 'a':
                 pattern.add(new Translation(0, 0,false, true, false));
                 break;
-            case 'e':
-                if(age>32) {
-                    pattern.add(new Translation(0, 0, false, false, true));
-                }
-                break;
             case 'f':
-                if(age>64){
+                if(age>0){
                     pattern.add(new Translation(0, 0,true, false, false));
                 }
                 break;

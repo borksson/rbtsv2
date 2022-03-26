@@ -6,9 +6,11 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main extends PApplet {
+
     interface AnimatedPShape {
         void display();
         void step();
+        void backStep();
     }
 
     int randColor() {
@@ -23,7 +25,8 @@ public class Main extends PApplet {
         int x;
         int y;
         String seed;
-        Integer age;
+        int age;
+        int age_step;
         MovementMachine movementMachine;
         ArrayList<Translation> pendingMovements;
         boolean isDead = false;
@@ -51,16 +54,18 @@ public class Main extends PApplet {
         @Override
         public void step() {
             //Takes UUID and converts it into a movement pattern
-            if(this.pendingMovements.isEmpty()){
+            if(this.age_step == this.pendingMovements.size() || this.pendingMovements.isEmpty()){
                 this.pendingMovements = this.movementMachine.makeMovement(this.age);
                 this.age++;
+                this.age_step = 0;
             }
             else {
-                Translation translation = this.pendingMovements.get(0);
+                Translation translation = this.pendingMovements.get(this.age_step);
                 if(translation.isDead()){
                     this.isDead = true;
                 }
                 if(translation.isChangeColor()){
+                    //TODO: Make predictable
                     rbt.setFill(randColor());
                 }
                 if(translation.isPregnant()){
@@ -69,7 +74,34 @@ public class Main extends PApplet {
                 }
                 this.x += translation.getX();
                 this.y += translation.getY();
-                this.pendingMovements.remove(0);
+                this.age_step++;
+            }
+        }
+
+        @Override
+        public void backStep() {
+            //Takes UUID and converts it into a movement pattern
+            if(this.age_step == 0 || this.pendingMovements.isEmpty()){
+                this.pendingMovements = this.movementMachine.makeMovement(this.age);
+                this.age--;
+                this.age_step = this.pendingMovements.size()-1;
+            }
+            else {
+                Translation translation = this.pendingMovements.get(this.age_step);
+                if(translation.isDead()){
+                    this.isDead = false;
+                }
+                if(translation.isChangeColor()){
+                    //TODO: Make predictable
+                    rbt.setFill(randColor());
+                }
+                if(translation.isPregnant()){
+                    this.isPregnant = false;
+                    System.out.println("UN-BIRTH.");
+                }
+                this.x -= translation.getX();
+                this.y -= translation.getY();
+                this.age_step--;
             }
         }
     }
@@ -82,31 +114,42 @@ public class Main extends PApplet {
         clear();
         ArrayList<Robot> robots_cpy = (ArrayList<Robot>) robots.clone();
         for(Robot r: robots_cpy){
-            r.display();
-            r.step();
-            if(r.isDead){
-                robots.remove(r);
-            }
-            if(r.isPregnant){
-                r.isPregnant = false;
-                int x = ThreadLocalRandom.current().nextInt(0, 600 + 1);
-                int y = ThreadLocalRandom.current().nextInt(0, 600 + 1);
-                robots.add(new Robot(x,y, UUID.randomUUID()));
+            if(!r.isDead){
+                r.step();
+                r.display();
+                gameStep_helper(r);
             }
         }
     }
 
-    //TODO: gameBackStep
+    void gameBackStep(){
+        clear();
+        ArrayList<Robot> robots_cpy = (ArrayList<Robot>) robots.clone();
+        for(Robot r: robots_cpy){
+            r.backStep();
+            r.display();
+            gameStep_helper(r);
+        }
+    }
+
+    private void gameStep_helper(Robot r) {
+        if(r.isPregnant){
+            r.isPregnant = false;
+            int x = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+            int y = ThreadLocalRandom.current().nextInt(0, 600 + 1);
+            robots.add(new Robot(x,y, UUID.randomUUID()));
+        }
+    }
 
     public void settings(){
         size(600,600);
     }
 
     public void setup(){
-        for(int i=0;i<2;i++){
+        for(int i=0;i<1;i++){
             int x = ThreadLocalRandom.current().nextInt(0, 600 + 1);
             int y = ThreadLocalRandom.current().nextInt(0, 600 + 1);
-            robots.add(new Robot(x,y, UUID.fromString("0b0b0b0b-0b0b-0b0b-0b0b-0b0b0b0b0b0b")));
+            robots.add(new Robot(300,300, UUID.fromString("0b0b0b0f-0b0b-0b0b-0b0b-0b0b0b0b0b0f")));
         }
         background(0);
     }
@@ -118,7 +161,8 @@ public class Main extends PApplet {
                 redraw();
             }
             else if(k==37){
-                System.out.println("BACK STEP");
+                this.isForward = false;
+                redraw();
             }
         }
         if (k == 'P') {
@@ -137,7 +181,8 @@ public class Main extends PApplet {
             gameStep();
         }
         else {
-
+            gameBackStep();
+            this.isForward = true;
         }
     }
 
